@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude 101 Training : Feedback</title>
+    <style>
+        :root {
+            --navy: #1e2a38;
+            --navy-deep: #141c26;
+            --cream: #fff1c9;
+            --blue-grey: #c9d2e3;
+            --page-bg: #ffffff;
+            --ink: #1e2a38;
+            --ink-soft: rgba(30,42,56,0.62);
+            --line: rgba(30,42,56,0.18);
+            --muted: rgba(30,42,56,0.48);
+            --muted-bg: rgba(30,42,56,0.08);
+            --danger: #8c3b2e;
+            --danger-bg: rgba(140,59,46,0.1);
+            --font-display: 'Fraunces', serif;
+            --font-body: 'Inter', sans-serif;
+            --font-mono: 'IBM Plex Mono', monospace;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--cream) 0%, rgba(201,210,227,0.2) 100%);
+            color: var(--ink);
+            font-family: var(--font-body);
+            min-height: 100vh;
+            padding: 1rem;
+        }
+
+        @media (min-width: 768px) {
+            body {
+                padding: 2rem;
+            }
+        }
+
+        .container {
+            max-width: 48rem;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--ink);
+            margin-bottom: 0.5rem;
+            font-family: var(--font-display);
+        }
+
+        @media (min-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+
+        .header p {
+            color: var(--muted);
+            font-size: 1rem;
+        }
+
+        /* Form Card */
+        .form-container {
+            background: var(--page-bg);
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 30px rgba(20,28,38,0.1);
+            padding: 2rem;
+        }
+
+        @media (min-width: 768px) {
+            .form-container {
+                padding: 2.5rem;
+            }
+        }
+
+        .form-section {
+            border-bottom: 1px solid var(--line);
+            padding-bottom: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-section:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+            margin-bottom: 0;
+        }
+
+        .form-section h2 {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--ink);
+            margin-bottom: 1rem;
+            font-family: var(--font-display);
+        }
+
+        /* Radio and Checkbox */
+        .option-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .option-item {
+            display: flex;
+            align-items: flex-start;
+            padding: 0.75rem;
+            border: 2px solid var(--line);
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: transparent;
+        }
+
+        .option-item:hover {
+            border-color: var(--navy);
+            background-color: var(--muted-bg);
+        }
+
+        .option-item.checked {
+            border-color: var(--navy);
+            background-color: var(--muted-bg);
+        }
+
+        .option-item input {
+            width: 1.5rem;
+            height: 1.5rem;
+            margin-top: 0.2rem;
+            cursor: pointer;
+            accent-color: var(--navy);
+            flex-shrink: 0;
+        }
+
+        .option-item label {
+            margin-left: 0.75rem;
+            color: var(--ink);
+            cursor: pointer;
+            flex: 1;
+            font-size: 1rem;
+        }
+
+        /* Textarea */
+        textarea {
+            width: 100%;
+            height: 7rem;
+            padding: 1rem;
+            border: 2px solid var(--line);
+            border-radius: 0.5rem;
+            font-family: var(--font-body);
+            font-size: 1rem;
+            color: var(--ink);
+            outline: none;
+            resize: vertical;
+            transition: border-color 0.2s ease;
+        }
+
+        textarea:focus {
+            border-color: var(--navy);
+        }
+
+        textarea::placeholder {
+            color: var(--muted);
+        }
+
+        /* Submit Section */
+        .submit-section {
+            border-top: 1px solid var(--line);
+            padding-top: 1.5rem;
+            display: flex;
+            gap: 1rem;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .submit-note {
+            font-size: 0.95rem;
+            color: var(--muted);
+        }
+
+        .submit-button {
+            padding: 0.75rem 2rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            color: #ffffff;
+            background: var(--navy);
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 1rem;
+            font-family: var(--font-body);
+        }
+
+        .submit-button:hover:not(:disabled) {
+            background: var(--navy-deep);
+        }
+
+        .submit-button:disabled {
+            background: var(--muted-bg);
+            color: var(--muted);
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 2rem;
+            font-size: 0.95rem;
+            color: var(--muted);
+        }
+
+        /* Success Message */
+        .success-container {
+            min-height: 100vh;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @media (min-width: 768px) {
+            .success-container {
+                padding: 2rem;
+            }
+        }
+
+        .success-card {
+            background: var(--page-bg);
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 30px rgba(20,28,38,0.1);
+            padding: 2rem;
+            text-align: center;
+            max-width: 42rem;
+            margin: 0 auto;
+        }
+
+        @media (min-width: 768px) {
+            .success-card {
+                padding: 3rem;
+            }
+        }
+
+        .success-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 4rem;
+            height: 4rem;
+            background: var(--muted-bg);
+            border-radius: 9999px;
+            margin-bottom: 1rem;
+            color: var(--navy);
+            font-size: 2rem;
+        }
+
+        .success-card h2 {
+            font-size: 1.75rem;
+            font-weight: bold;
+            color: var(--ink);
+            margin-bottom: 0.5rem;
+            font-family: var(--font-display);
+        }
+
+        .success-card p {
+            font-size: 1rem;
+            color: var(--muted);
+            margin-bottom: 2rem;
+        }
+
+        .summary-box {
+            background: var(--muted-bg);
+            border: 1px solid var(--line);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-top: 2rem;
+            text-align: left;
+        }
+
+        .summary-box h3 {
+            font-weight: 600;
+            color: var(--ink);
+            margin-bottom: 1rem;
+        }
+
+        .summary-item {
+            font-size: 1rem;
+            color: var(--ink-soft);
+            margin-bottom: 0.75rem;
+        }
+
+        .summary-item strong {
+            font-weight: 500;
+            color: var(--ink);
+        }
+
+        .summary-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .summary-tag {
+            background: var(--muted-bg);
+            color: var(--ink-soft);
+            padding: 0.5rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.85rem;
+            border: 1px solid var(--line);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid var(--muted);
+            border-top-color: var(--navy);
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Form Container -->
+    <div id="formContainer" class="container">
+        <div class="header">
+            <img id="logoImg" src="MANAGING__.png" alt="Managing & Developing People" style="max-width: 100%; height: auto; margin-bottom: 2rem; max-height: 120px;">
+            <h1>Claude 101 Training : Feedback</h1>
+            <p>ความคิดเห็นของคุณช่วยให้เราปรับปรุงการสอนในอนาคต</p>
+        </div>
+
+        <form id="surveyForm" class="form-container">
+            <!-- Question 1 -->
+            <div class="form-section">
+                <h2>1. จังหวะการสอน (ความเร็ว) เป็นอย่างไร <span style="color: #8c3b2e;">*</span></h2>
+                <div class="option-group">
+                    <div class="option-item">
+                        <input type="radio" id="pace1" name="pace" value="fast">
+                        <label for="pace1">เร็วเกินไป</label>
+                    </div>
+                    <div class="option-item">
+                        <input type="radio" id="pace2" name="pace" value="medium">
+                        <label for="pace2">กำลังดี</label>
+                    </div>
+                    <div class="option-item">
+                        <input type="radio" id="pace3" name="pace" value="slow">
+                        <label for="pace3">ช้าเกินไป</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Question 2 -->
+            <div class="form-section">
+                <h2>2. หัวข้อไหนที่คุณชอบมากที่สุด - เลือกได้มากกว่า 1 <span style="color: #8c3b2e;">*</span></h2>
+                <div class="option-group">
+                    <div class="option-item">
+                        <input type="checkbox" id="topic1" name="topics" value="Claude Foundations">
+                        <label for="topic1">Claude Foundations</label>
+                    </div>
+                    <div class="option-item">
+                        <input type="checkbox" id="topic2" name="topics" value="Art of Prompting">
+                        <label for="topic2">Art of Prompting</label>
+                    </div>
+                    <div class="option-item">
+                        <input type="checkbox" id="topic3" name="topics" value="Skill + Tool">
+                        <label for="topic3">Skill + Tool</label>
+                    </div>
+                    <div class="option-item">
+                        <input type="checkbox" id="topic4" name="topics" value="Artifacts + Agent">
+                        <label for="topic4">Artifacts + Agent</label>
+                    </div>
+                    <div class="option-item">
+                        <input type="checkbox" id="topic5" name="topics" value="Prompt Engineering + Project">
+                        <label for="topic5">Prompt Engineering + Project</label>
+                    </div>
+                    <div class="option-item">
+                        <input type="checkbox" id="topic6" name="topics" value="Claude Desktop (Cowork) + MCP">
+                        <label for="topic6">Claude Desktop (Cowork) + MCP</label>
+                    </div>
+                    <div class="option-item">
+                        <input type="checkbox" id="topic7" name="topics" value="รับมือ Claude ตอบผิด + Privacy & Security">
+                        <label for="topic7">รับมือ Claude ตอบผิด + Privacy & Security</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Question 3 -->
+            <div class="form-section">
+                <h2>3. ชอบหัวข้อที่เลือก เพราะอะไร <span style="color: #8c3b2e;">*</span></h2>
+                <textarea id="topicReason" name="topicReason" placeholder="กรุณากรอกข้อมูล (จำเป็น)" required></textarea>
+            </div>
+
+            <!-- Question 4 -->
+            <div class="form-section">
+                <h2>4. อยากให้มีการสอนต่อในระดับที่ลึกกว่านี้อีกหรือไม่ <span style="color: #8c3b2e;">*</span></h2>
+                <div class="option-group">
+                    <div class="option-item">
+                        <input type="radio" id="level1" name="advancedLevel" value="enough">
+                        <label for="level1">ความรู้ที่ได้ไปวันนี้ เพียงพอกับการเอาไปใช้แล้ว</label>
+                    </div>
+                    <div class="option-item">
+                        <input type="radio" id="level2" name="advancedLevel" value="more">
+                        <label for="level2">อยากให้สอนเพิ่มอีก</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Question 5 -->
+            <div class="form-section">
+                <h2>5. คุณอยากรู้เรื่องอะไรเพิ่มเติมอีกบ้าง <span style="color: #8c3b2e;">*</span></h2>
+                <textarea id="moreInterests" name="moreInterests" placeholder="กรุณากรอกข้อมูล (จำเป็น)" required></textarea>
+            </div>
+
+            <!-- Question 6 -->
+            <div class="form-section">
+                <h2>6. ข้อเสนอแนะอื่นๆ ถึงผู้สอน <span style="color: #8c3b2e;">*</span></h2>
+                <textarea id="suggestions" name="suggestions" placeholder="กรุณากรอกข้อมูล (จำเป็น)" required></textarea>
+            </div>
+
+            <!-- Submit Section -->
+            <div class="submit-section">
+                <div class="submit-note">* กรุณาตอบคำถามทั้ง 6 ข้อให้ครบถ้วน</div>
+                <button type="submit" class="submit-button" id="submitBtn">
+                    ส่งแบบฟอร์ม
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Success Container -->
+    <div id="successContainer" class="success-container hidden">
+        <div class="success-card">
+            <img id="successLogoImg" src="MANAGING__.png" alt="Managing & Developing People" style="max-width: 100%; height: auto; margin-bottom: 2rem; max-height: 100px;">
+            <div class="success-icon">✓</div>
+            <h2>ขอบคุณค่ะ!</h2>
+            <p>ข้อมูลของคุณได้รับการบันทึกเรียบร้อยแล้ว</p>
+            
+            <div class="summary-box">
+                <h3>สรุปข้อมูลที่ส่ง:</h3>
+                <div id="summaryContent"></div>
+            </div>
+
+            <p style="margin-top: 2rem; font-size: 0.875rem; color: var(--muted);">
+                ข้อมูลของคุณจะช่วยปรับปรุงการอบรมในอนาคต
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // ===== CONFIGURATION =====
+        // Replace with your GitHub raw URL if hosted on GitHub
+        // Example: https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/logo-small.svg
+        const LOGO_IMAGE_PATH = 'MANAGING__.png'; // หรือใช้ URL เต็มจาก GitHub
+        
+        // Replace with your Google Apps Script URL
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby9VUUpbDvqUiBAJs3u9JSfrd3zfwRC32vjWzIsarYudTGkSJObbCuQYUVV2jTFBqjLXQ/exec';
+        // ===== END CONFIGURATION =====
+
+        // Set logo image source
+        document.getElementById('logoImg').src = LOGO_IMAGE_PATH;
+        document.getElementById('successLogoImg').src = LOGO_IMAGE_PATH;
+
+        const form = document.getElementById('surveyForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const formContainer = document.getElementById('formContainer');
+        const successContainer = document.getElementById('successContainer');
+
+        // Update option items styling when radio/checkbox changes
+        form.addEventListener('change', (e) => {
+            if (e.target.type === 'radio' || e.target.type === 'checkbox') {
+                const item = e.target.closest('.option-item');
+                if (item) {
+                    // Remove checked class from all items in same group
+                    const group = e.target.closest('.option-group');
+                    if (e.target.type === 'radio') {
+                        group.querySelectorAll('.option-item').forEach(el => {
+                            el.classList.remove('checked');
+                        });
+                    }
+                    // Add checked class to current item if checked
+                    if (e.target.checked) {
+                        item.classList.add('checked');
+                    } else {
+                        item.classList.remove('checked');
+                    }
+                }
+            }
+            validateForm();
+        });
+
+        function validateForm() {
+            const pace = document.querySelector('input[name="pace"]:checked');
+            const topics = document.querySelectorAll('input[name="topics"]:checked');
+            const topicReason = document.getElementById('topicReason').value.trim();
+            const advancedLevel = document.querySelector('input[name="advancedLevel"]:checked');
+            const moreInterests = document.getElementById('moreInterests').value.trim();
+            const suggestions = document.getElementById('suggestions').value.trim();
+
+            const isValid = pace && topics.length > 0 && topicReason && advancedLevel && moreInterests && suggestions;
+            submitBtn.disabled = !isValid;
+        }
+
+        function getFormData() {
+            const pace = document.querySelector('input[name="pace"]:checked')?.value || '';
+            const topics = Array.from(document.querySelectorAll('input[name="topics"]:checked'))
+                .map(el => el.value)
+                .join(', ');
+            const topicReason = document.getElementById('topicReason').value;
+            const advancedLevel = document.querySelector('input[name="advancedLevel"]:checked')?.value || '';
+            const moreInterests = document.getElementById('moreInterests').value;
+            const suggestions = document.getElementById('suggestions').value;
+            const timestamp = new Date().toLocaleString('th-TH');
+
+            return {
+                timestamp,
+                pace,
+                topics,
+                topicReason,
+                advancedLevel,
+                moreInterests,
+                suggestions
+            };
+        }
+
+        function displaySuccess(data) {
+            formContainer.classList.add('hidden');
+            successContainer.classList.remove('hidden');
+
+            const paceLabel = {
+                'fast': 'เร็วเกินไป',
+                'medium': 'กำลังดี',
+                'slow': 'ช้าเกินไป'
+            };
+
+            const levelLabel = {
+                'enough': 'ความรู้ที่ได้ไปวันนี้ เพียงพอกับการเอาไปใช้แล้ว',
+                'more': 'อยากให้สอนเพิ่มอีก'
+            };
+
+            const summaryHTML = `
+                <div class="summary-item">
+                    <strong>วันเวลา:</strong> ${data.timestamp}
+                </div>
+                <div class="summary-item">
+                    <strong>จังหวะการสอน:</strong> ${paceLabel[data.pace] || data.pace}
+                </div>
+                <div class="summary-item">
+                    <strong>หัวข้อที่ชอบ:</strong>
+                    <div class="summary-tags">
+                        ${data.topics.split(', ').map(topic => 
+                            `<span class="summary-tag">${topic}</span>`
+                        ).join('')}
+                    </div>
+                </div>
+                ${data.topicReason ? `
+                <div class="summary-item">
+                    <strong>สาเหตุ:</strong> ${data.topicReason}
+                </div>
+                ` : ''}
+                <div class="summary-item">
+                    <strong>ระดับลึก:</strong> ${levelLabel[data.advancedLevel] || data.advancedLevel}
+                </div>
+                ${data.moreInterests ? `
+                <div class="summary-item">
+                    <strong>สนใจเรื่อง:</strong> ${data.moreInterests}
+                </div>
+                ` : ''}
+                ${data.suggestions ? `
+                <div class="summary-item">
+                    <strong>ข้อเสนอแนะ:</strong> ${data.suggestions}
+                </div>
+                ` : ''}
+            `;
+
+            document.getElementById('summaryContent').innerHTML = summaryHTML;
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (GOOGLE_SCRIPT_URL === 'https://script.google.com/macros/d/YOUR_SCRIPT_ID/userwithresponse') {
+                alert('โปรดตั้งค่า GOOGLE_SCRIPT_URL ก่อนส่งแบบฟอร์ม\n\nดูคำแนะนำในไฟล์ setup-google-sheets.md');
+                return;
+            }
+
+            const originalText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="loading"></span> กำลังส่ง...';
+
+            try {
+                const formData = getFormData();
+
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    body: JSON.stringify(formData)
+                });
+
+                // With no-cors mode, we can't check response, so assume success after slight delay
+                setTimeout(() => {
+                    displaySuccess(formData);
+                }, 500);
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('เกิดข้อผิดพลาดในการส่งแบบฟอร์ม\n\nกรุณาตรวจสอบ Google Apps Script URL');
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }
+        });
+
+        // Initial validation
+        validateForm();
+    </script>
+</body>
+</html>
